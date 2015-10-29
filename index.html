@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>Adaptive Delivery</title>
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<script src='https://api.mapbox.com/mapbox.js/v2.2.2/mapbox.js'></script>
+<link href='https://api.mapbox.com/mapbox.js/v2.2.2/mapbox.css' rel='stylesheet' />
+<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Abel|Montserrat:400,700|Ubuntu+Mono:400,400italic,700,700italic">
+
+<style>
+
+body {
+  font-family: 'Ubuntu Mono';
+  margin: 0;
+  padding: 0;
+  font-size: 18px;
+}
+
+
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  margin: 0.3em 0 0 0;
+}
+input[type=range]:focus {
+  outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: #ddd;
+  margin-top: 0.5em;
+  margin-bottom: 0.75em;
+}
+input[type=range]::-webkit-slider-thumb {
+  height: 25px;
+  width: 25px;
+  background: transparent url('./images/oval.png') center center no-repeat;
+  cursor: pointer;
+  margin-top: -11px;
+  -webkit-appearance: none;
+}
+input[type=range]::-moz-range-thumb {
+  border: none;
+  height: 25px;
+  width: 25px;
+  background: transparent url('./images/oval.png') center center no-repeat;
+  cursor: pointer;
+}
+input[type=range]:focus::-webkit-slider-runnable-track {
+  background: #ddd;
+}
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: #ddd;
+}
+
+h1 {
+  font-family: 'Abel';
+  font-weight: 400;
+  color: #0A495F
+}
+h2 {
+  font-family: 'Montserrat';
+  font-weight: 700;
+  color: #0A495F;
+}
+h3 {
+  font-family: 'Montserrat';
+  font-weight: 400;
+  color: #C81721;
+}
+p {
+  font-family: 'Ubuntu Mono';
+  font-weight: 400;
+  color: #0A495F;
+}
+
+.container {
+  margin: 0 auto;
+  padding: 2em 1em;
+  max-width: 600px;
+}
+
+.locations {
+  padding: 2em 1em;
+}
+
+.location {
+  margin: 0 0 0.5em 0;
+  clear: both;
+  border: solid 1px #666;
+  background: transparent url('./images/searchIcon.png') center left 1em no-repeat;
+}
+
+.location label {
+  display: inline-block;
+  padding: 0.75em 0 0 3em;
+}
+
+.location input[type="text"] {
+  font-family: 'Ubuntu Mono';
+  display: block;
+  float: right;
+  width: 50%;
+  height: 2em;
+  font-size: 1.2em;
+  border: none;
+  border-left: solid 1px #666;
+  float: right;
+  padding-left: 0.6em;
+}
+
+.settings {
+  margin-bottom: 4em;
+}
+
+.settings h2 {
+  text-align: center;
+}
+
+.settings input[type="range"] {
+  width: 100%;
+  padding: 0;
+}
+
+.label-current {
+  position: absolute;
+}
+
+.range-slider {
+  clear: both;
+  margin-bottom: 4em;
+}
+
+.range-holder {
+  border-left: solid 3px #ddd;
+  border-right: solid 3px #ddd;
+  margin-bottom: 0.5em;
+}
+
+.label-left, .label-right {
+  font-weight: bold;
+}
+
+.label-left {
+  float: left;
+}
+
+.label-right {
+  float: right;
+}
+
+.label-current {
+  background-color: #fff;
+  color: #00495f;
+}
+
+
+.clearfix {
+  clear: both;
+  height: 0px;
+}
+
+#map {
+  width: 100%;
+  height: 300px;
+}
+
+.next-btn {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+.next-btn a {
+  font-family: 'Montserrat';
+  display: block;
+  width: 100%;
+  background-color: #c81721;
+  padding: 1.2em 0 1.3em 0;
+  text-align: center;
+  color: #fff;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+</style>
+</head>
+<body>
+<div class='locations container'>
+  <form id='location-form' action='#' method='post'>
+    <div class='location'>
+      <label for='pickup-location'>
+        Enter Pickup Location
+      </label>
+      <input id='pickup-location' name='pickup-location' type='text' />
+      <div class='clearfix'></div>
+    </div>
+    <div class='location'>
+      <label for='dropoff-location'>
+        Enter Dropoff Location
+      </label>
+      <input id='dropoff-location' name='dropoff-location' type='text' />
+      <div class='clearfix'></div>
+    </div>
+    <div style='display: none;'>
+      <input type='submit' />
+    </div>
+  </form>
+</div>
+<div id='map'></div>
+<div id='settings' class='settings container'>
+  <h2>ADJUST SETTINGS</h2>
+  <div class='range-slider cost-range'>
+    <div class='range-holder'>
+      <input id='cost-slider' type='range' />
+    </div>
+    <div class='range-labels'>
+      <div class='label-left'>
+        1 day
+      </div>
+      <div class='label-right'>
+        4 weeks
+      </div>
+      <div id='cost-label' class='label-current cost-label'></div>
+    </div>
+  </div>
+  <div class='range-slider time-range'>
+    <div class='range-holder'>
+      <input id='time-slider' type='range' />
+    </div>
+    <div class='range-labels'>
+      <div class='label-left'>
+        $500
+      </div>
+      <div class='label-right'>
+        $15,000+
+      </div>
+      <div id='time-label' class='label-current time-label'></div>
+    </div>
+  </div>
+</div>
+<div class='next-btn'>
+  <a href='#'>
+    NEXT
+  </a>
+</div>
+
+<script src='./app.js'></script>
+</body>
+</html>
