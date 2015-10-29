@@ -64,7 +64,7 @@ var setMarkers = function (items) {
     }
     var marker = L.marker(new L.LatLng(city.lat, city.lng), {
       icon: L.icon({
-        iconUrl: './location-icon-map-Map_pin3.png',
+        iconUrl: './images/location-icon-map-Map_pin3.png',
         iconSize: [23, 37],
         iconAnchor: [12, 37]
       })
